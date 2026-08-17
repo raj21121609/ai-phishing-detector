@@ -29,18 +29,24 @@ class PipelineTests(TestCase):
         self.assertIn("threats", signals)
         
     def test_url_extractor(self):
-        text = "Check this link: http://192.168.1.1/login.php and https://bit.ly/123"
+        text = "Check this link: http://192.168.1.1/login.php and https://bit.ly/123 and https://micros0ft.com"
         urls = extract_and_analyze_urls(text)
-        self.assertEqual(len(urls), 2)
+        self.assertEqual(len(urls), 3)
         
         ip_url = next(u for u in urls if '192.168.1.1' in u['url'])
-        self.assertTrue(ip_url['has_ip'])
-        self.assertFalse(ip_url['https_usage'])
-        self.assertIn('login', ip_url['suspicious_keywords'])
+        self.assertTrue(ip_url['features']['has_ip'])
+        self.assertFalse(ip_url['features']['https_usage'])
+        self.assertIn('login', ip_url['features']['suspicious_keywords'])
+        self.assertGreater(ip_url['risk_score'], 50)
         
         short_url = next(u for u in urls if 'bit.ly' in u['url'])
-        self.assertTrue(short_url['is_shortened'])
-        self.assertTrue(short_url['https_usage'])
+        self.assertTrue(short_url['features']['is_shortened'])
+        self.assertTrue(short_url['features']['https_usage'])
+        
+        typo_url = next(u for u in urls if 'micros0ft' in u['url'])
+        self.assertEqual(typo_url['features']['impersonated_brand'], 'microsoft')
+        self.assertIn("Possible brand impersonation of 'microsoft'", typo_url['signals'])
+        self.assertGreaterEqual(typo_url['risk_score'], 50)
         
     def test_sender_analyzer(self):
         sender = "Support Team <support@gmail.com>"
@@ -59,4 +65,4 @@ class PipelineTests(TestCase):
         self.assertEqual(result['sender']['sender_domain'], "paypal.com")
         self.assertIn("password_request", result['text_signals'])
         self.assertEqual(len(result['urls']), 1)
-        self.assertTrue(result['urls'][0]['is_shortened'])
+        self.assertTrue(result['urls'][0]['features']['is_shortened'])
