@@ -13,6 +13,7 @@ class AnalyzeEmailTests(APITestCase):
         self.assertIn('risk_level', response.data)
         self.assertIn('ml_probability', response.data)
         self.assertIn('detected_threats', response.data)
+        self.assertIn('explanation', response.data)
         self.assertIn('details', response.data)
 
     def test_analyze_email_empty(self):

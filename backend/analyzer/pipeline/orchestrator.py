@@ -6,6 +6,7 @@ from .text_analyzer import analyze_text
 from .url_extractor import extract_and_analyze_urls
 from .sender_analyzer import analyze_sender
 from .risk_engine import calculate_risk_score
+from .explainer import generate_explanation
 
 ml_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'ml'))
 if ml_path not in sys.path:
@@ -30,19 +31,29 @@ def analyze_email_content(raw_email_text):
     
     risk_results = calculate_risk_score(ml_data, text_signals, url_data, sender_signals)
     
+    details = {
+        "sender": sender_signals,
+        "text_signals": text_signals,
+        "urls": url_data
+    }
+    
+    explanation = generate_explanation(
+        risk_results["risk_level"], 
+        risk_results["risk_score"], 
+        ml_data.get("probability", 0.0), 
+        details
+    )
+    
     return {
         "risk_score": risk_results["risk_score"],
         "risk_level": risk_results["risk_level"],
         "ml_probability": ml_data.get("probability", 0.0),
         "detected_threats": risk_results["detected_threats"],
+        "explanation": explanation,
         "metadata": {
             "subject": parsed_data.get('subject'),
             "recipient": parsed_data.get('recipient'),
             "email_length": parsed_data.get('email_length')
         },
-        "details": {
-            "sender": sender_signals,
-            "text_signals": text_signals,
-            "urls": url_data
-        }
+        "details": details
     }
