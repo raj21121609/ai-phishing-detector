@@ -62,7 +62,8 @@ class PipelineTests(TestCase):
         result = analyze_email_content(text)
         
         self.assertEqual(result['metadata']['subject'], "Verify your account")
-        self.assertEqual(result['sender']['sender_domain'], "paypal.com")
-        self.assertIn("password_request", result['text_signals'])
-        self.assertEqual(len(result['urls']), 1)
-        self.assertTrue(result['urls'][0]['features']['is_shortened'])
+        self.assertEqual(result['details']['sender']['sender_domain'], "paypal.com")
+        self.assertIn("password_request", result['details']['text_signals'])
+        self.assertEqual(len(result['details']['urls']), 1)
+        self.assertTrue(result['details']['urls'][0]['features']['is_shortened'])
+        self.assertIn("risk_score", result)
