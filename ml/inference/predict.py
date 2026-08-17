@@ -23,6 +23,9 @@ class PhishingClassifier:
         if not self.is_loaded:
             return {"prediction": "unknown", "probability": 0.0, "error": "Model not loaded"}
             
+        if not isinstance(email_text, str):
+            return {"prediction": "unknown", "probability": 0.0, "error": "Invalid input type. Expected string."}
+            
         cleaned = clean_text(email_text)
         if not cleaned:
             return {"prediction": "legitimate", "probability": 0.0}
