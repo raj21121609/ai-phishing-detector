@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-card/60 backdrop-blur-lg border border-slate-800 shadow-2xl;
+  }
+}
