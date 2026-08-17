@@ -16,44 +16,46 @@ from inference.predict import predict_email
 
 def analyze_email_content(raw_email_text):
     """Orchestrates the entire email analysis pipeline."""
-    parsed_data = parse_email(raw_email_text)
-    
-    sender_signals = {}
-    if parsed_data['sender']:
-        sender_signals = analyze_sender(parsed_data['sender'], parsed_data.get('reply_to'))
+    try:
+        parsed_data = parse_email(raw_email_text)
         
-    text_signals = analyze_text(parsed_data['body'], parsed_data.get('subject', ''))
-    
-    url_data = extract_and_analyze_urls(parsed_data['body'])
-    
-    text_for_ml = f"{parsed_data.get('subject', '')} {parsed_data.get('body', '')}".strip()
-    ml_data = predict_email(text_for_ml)
-    
-    risk_results = calculate_risk_score(ml_data, text_signals, url_data, sender_signals)
-    
-    details = {
-        "sender": sender_signals,
-        "text_signals": text_signals,
-        "urls": url_data
-    }
-    
-    explanation = generate_explanation(
-        risk_results["risk_level"], 
-        risk_results["risk_score"], 
-        ml_data.get("probability", 0.0), 
-        details
-    )
-    
-    return {
-        "risk_score": risk_results["risk_score"],
-        "risk_level": risk_results["risk_level"],
-        "ml_probability": ml_data.get("probability", 0.0),
-        "detected_threats": risk_results["detected_threats"],
-        "explanation": explanation,
-        "metadata": {
-            "subject": parsed_data.get('subject'),
-            "recipient": parsed_data.get('recipient'),
-            "email_length": parsed_data.get('email_length')
-        },
-        "details": details
-    }
+        sender_signals = {}
+        if parsed_data['sender']:
+            sender_signals = analyze_sender(parsed_data['sender'], parsed_data.get('reply_to'))
+            
+        text_signals = analyze_text(parsed_data['body'], parsed_data.get('subject', ''))
+        
+        url_data = extract_and_analyze_urls(parsed_data['body'])
+        
+        text_for_ml = f"{parsed_data.get('subject', '')} {parsed_data.get('body', '')}".strip()
+        ml_data = predict_email(text_for_ml)
+        
+        risk_results = calculate_risk_score(ml_data, text_signals, url_data, sender_signals)
+        
+        details = {
+            "sender": sender_signals,
+            "text_signals": text_signals,
+            "urls": url_data
+        }
+        
+        explanation = generate_explanation(
+            risk_results["risk_level"], 
+            risk_results["risk_score"], 
+            ml_data.get("probability", 0.0), 
+            details
+        )
+        
+        return {
+            "risk_score": risk_results["risk_score"],
+            "risk_level": risk_results["risk_level"],
+            "phishing_probability": ml_data.get("probability", 0.0),
+            "email": {
+                "sender": parsed_data.get('sender'),
+                "subject": parsed_data.get('subject')
+            },
+            "threats": risk_results["detected_threats"],
+            "url_analysis": url_data,
+            "explanation": explanation
+        }
+    except Exception as e:
+        return {"error": True}

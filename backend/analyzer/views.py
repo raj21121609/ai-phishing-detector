@@ -12,5 +12,11 @@ class AnalyzeEmailView(APIView):
             
             analysis_results = analyze_email_content(email_text)
             
+            if "error" in analysis_results:
+                return Response(
+                    {"error": "Analysis failed", "message": "An unexpected error occurred during processing."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
             return Response(analysis_results, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
